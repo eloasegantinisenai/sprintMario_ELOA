@@ -1,7 +1,3 @@
-/**
- * Super Mario Jump - Lógica do Jogo e Integração com Ranking MySQL (Laragon)
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     // Elementos do Jogo
     const mario = document.querySelector('.mario');
@@ -10,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameBoard = document.getElementById('game-board');
     const hudPlayerName = document.getElementById('hud-player-name');
     const scoreDisplay = document.getElementById('score-display');
+    const livesDisplay = document.getElementById('lives-display'); // Elemento das vidas
     const jumpTip = document.getElementById('jump-tip');
 
     // Modais e Telas
@@ -28,10 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variáveis de Estado
     let currentPlayer = '';
     let score = 0;
+    let lives = 3;
+    let isInvincible = false;
     let isPlaying = false;
     let gameLoop = null;
     let scoreLoop = null;
-    let selectedCharacter = 'mario'; // Padrão: Mario
+    let selectedCharacter = 'mario';
 
     // Recupera último nome utilizado caso exista
     const savedName = localStorage.getItem('mario_jump_player');
@@ -52,72 +51,113 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isPlaying = true;
         score = 0;
+        lives = 3;
+        isInvincible = false;
+
         scoreDisplay.textContent = '0';
+        if (livesDisplay) {
+            livesDisplay.textContent = '❤️ ❤️ ❤️';
+        }
         hudPlayerName.textContent = currentPlayer || 'Jogador';
 
         // Ativa animações CSS do jogo
         gameBoard.classList.add('running');
 
-        // Loop de pontuação progressiva (1 ponto a cada 100ms)
-            scoreLoop = setInterval(() => {
-        if (isPlaying) {
-            score += 1;
-            scoreDisplay.textContent = score;
+        // Variável para guardar o nível de velocidade atual
+        let currentSpeedLevel = 0;
 
-            // 🌟 SE A PONTUAÇÃO CHEGAR OU PASSAR DE 50:
-            if (score >= 60) {
-                // Dizemos ao cano para andar mais rápido! 
-                // (Exemplo: fazer a animação durar só 1 segundo em vez de 1.5s ou 2s)
-                pipe.style.animationDuration = '1.2s'; 
+        scoreLoop = setInterval(() => {
+            if (isPlaying) {
+                score += 1;
+                scoreDisplay.textContent = score;
+
+                // Determina a nova duração de acordo com a pontuação
+                let newDuration = '1.8s';
+                let newLevel = 0;
+
+                if (score >= 700) {
+                    newDuration = '0.7s';
+                    newLevel = 6;
+                } else if (score >= 500) {
+                    newDuration = '0.8s';
+                    newLevel = 5;
+                } else if (score >= 300) {
+                    newDuration = '0.9s';
+                    newLevel = 4;
+                } else if (score >= 200) {
+                    newDuration = '1.0s';
+                    newLevel = 3;
+                } else if (score >= 100) {
+                    newDuration = '1.2s';
+                    newLevel = 2;
+                } else if (score >= 60) {
+                    newDuration = '1.4s';
+                    newLevel = 1;
+                }
+
+                // Só altera quando realmente mudar de nível/faixa de pontos
+                if (newLevel !== currentSpeedLevel) {
+                    currentSpeedLevel = newLevel;
+                    updatePipeSpeed(newDuration);
+                }
+
+                // Mudanças visuais de cenário por pontuação
+                if (score >= 150 && score < 300) {
+                    gameBoard.classList.add('night');
+                    gameBoard.classList.remove('deep-night');
+                } else if (score >= 400) {
+                    gameBoard.classList.remove('night');
+                    gameBoard.classList.add('deep-night');
+                }
             }
-            if (score >= 60) {
-                pipe.classList.add('fast');
-            }
-            // Quando passar de 100 pontos: degradê amarelo -> laranja -> vermelho
-            if (score >= 100 && score < 200) {
-                gameBoard.classList.add('night');
-                gameBoard.classList.remove('deep-night');
-            }
-            // Quando passar de 200 pontos: degradê roxo -> preto!
-            if (score >= 200) {
-                gameBoard.classList.remove('night');
-                gameBoard.classList.add('deep-night');
-            }
-        }
-    }, 100);
+        }, 100);
+
         // Loop de colisão
         gameLoop = setInterval(checkCollision, 10);
     }
 
-
     function resetElements() {
-        // Voltar a velocidade do cano e a cor do fundo ao normal
         pipe.classList.remove('fast');
         gameBoard.classList.remove('night');
         gameBoard.classList.remove('deep-night');
-        gameBoard.style.backgroundImage = ''; // Limpa qualquer estilo direto
-        // Reseta o cano e devolve a velocidade normal dele para o próximo jogo
+        gameBoard.style.backgroundImage = '';
+        currentSpeedLevel = 0;
         pipe.style.animation = '';
-        pipe.style.animationDuration = ''; // Volta à velocidade original!
+        pipe.style.animationDuration = '';
         pipe.style.left = '';
 
-        // Restaurar a moeda
         if (coin) {
             coin.style.display = '';
         }
 
-        // Reseta Mario
-        mario.src = 'assets/mario.gif';
+        const selectedChar = document.querySelector('input[name="character"]:checked')?.value || 'mario';
+
+        mario.classList.remove('sonic-active', 'luigi-active');
+
+        pipe.style.removeProperty('--pipe-speed');
+
+
+        if (selectedChar === 'sonic') {
+            mario.src = 'assets/soniccc.gif';
+            mario.classList.add('sonic-active');
+        } else if (selectedChar === 'luigi') {
+            mario.src = 'assets/luigi.gif';
+            mario.classList.add('luigi-active');
+        } else {
+            mario.src = 'assets/mario.gif';
+        }
+
+
+
         mario.style.animation = '';
         mario.style.bottom = '0px';
-        mario.style.width = '';
         mario.style.marginLeft = '';
+        mario.style.opacity = '1';
         mario.classList.remove('jump');
 
         if (jumpTip) {
             jumpTip.style.opacity = '1';
         }
-
     }
 
     function jump() {
@@ -142,21 +182,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const marioPosition = +window.getComputedStyle(mario).bottom.replace('px', '');
         const coinPosition = coin.offsetLeft;
 
-        // 1. COLISÃO COM O CANO (GAME OVER)
+        // 1. COLISÃO COM O CANO (SISTEMA DE VIDAS)
         if (pipePosition <= 120 && pipePosition > 0 && marioPosition < 80) {
-            triggerGameOver(pipePosition, marioPosition);
+            if (isInvincible) return;
+
+            lives -= 1;
+            isInvincible = true;
+            
+            const lifeEffect = document.getElementById('life-lost-effect');
+            const livesBox = document.querySelector('.lives-info');
+
+            if (lifeEffect) {
+                lifeEffect.classList.remove('show');
+                void lifeEffect.offsetWidth; // Força o reflow do browser para reiniciar a animação
+                lifeEffect.classList.add('show');
+            }
+
+            if (livesBox) {
+                livesBox.classList.add('damage');
+                setTimeout(() => livesBox.classList.remove('damage'), 400);
+            }
+
+            if (livesDisplay) {
+                if (lives === 2) livesDisplay.textContent = '❤️ ❤️ 🖤';
+                else if (lives === 1) livesDisplay.textContent = '❤️ 🖤 🖤';
+                else if (lives <= 0) livesDisplay.textContent = '🖤 🖤 🖤';
+            }
+
+            if (lives <= 0) {
+                triggerGameOver(pipePosition, marioPosition);
+                return;
+            }
+
+            setTimeout(() => {
+                isInvincible = false;
+            }, 1000);
         }
 
         // 2. PEGAR MOEDA (+10 PONTOS)
-        // Ajustado para uma faixa bem curta (entre 80px e 110px) e altura do pulo (>= 90px)
         if (coinPosition <= 130 && coinPosition >= 40 && marioPosition >= 50 && coin.style.display !== 'none') {
             score += 10;
             scoreDisplay.textContent = score;
-
-            // Sume com a moeda imediatamente ao pegar
             coin.style.display = 'none';
 
-            // Reaparece para a próxima rodada/ciclo
             setTimeout(() => {
                 if (isPlaying) {
                     coin.style.display = 'block';
@@ -170,32 +238,33 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(gameLoop);
         clearInterval(scoreLoop);
 
-        
         gameBoard.classList.remove('running');
 
-        
         pipe.style.animation = 'none';
         pipe.style.left = `${pipePosition}px`;
 
-        // Congela o Mario na altura exata e muda para a imagem de Game Over
         mario.style.animation = 'none';
         mario.style.bottom = `${marioPosition}px`;
-        mario.src = 'assets/game-over.png';
+
+        if (selectedCharacter === 'sonic') {
+            mario.src = 'assets/game-over-sonic.png';
+        } else if (selectedCharacter === 'luigi') {
+            mario.src = 'assets/luigi-game-overr.png'; // Ou mantenha 'assets/luigi.gif' caso não tenha a imagem de game over dele
+        } else {
+            mario.src = 'assets/game-over.png';
+        }
+
         mario.style.width = '75px';
         mario.style.marginLeft = '50px';
 
-        // Atualiza modal de Game Over
         finalScoreValue.textContent = score;
         saveStatusMsg.textContent = 'Salvando pontuação no banco...';
         saveStatusMsg.style.color = '#ffcc00';
 
-        // Abre modal de Game Over
         gameoverModal.classList.add('active');
 
-        // Salva a pontuação no banco MySQL via PHP
         saveScore(currentPlayer, score);
     }
-
 
     function saveScore(playerName, finalScore) {
         fetch('salvar_ranking.php', {
@@ -228,9 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Busca o ranking atualizado no banco
-     */
     function fetchRanking() {
         fetch('obter_ranking.php')
             .then(res => res.json())
@@ -242,9 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error('Erro ao buscar ranking:', err));
     }
 
-    /**
-     * Atualiza a tabela HTML do ranking
-     */
     function renderRanking(list, highlightName = null, highlightScore = null) {
         if (!rankingBody) return;
         rankingBody.innerHTML = '';
@@ -259,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
         list.forEach((item, index) => {
             const tr = document.createElement('tr');
 
-            // Destaca a pontuação atual recém-salva se coincidir
             if (!highlighted && highlightName && item.nome === highlightName && parseInt(item.pontos, 10) === highlightScore) {
                 tr.classList.add('highlight-current');
                 highlighted = true;
@@ -280,9 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Função auxiliar para sanitizar strings no HTML
-     */
     function escapeHtml(str) {
         if (!str) return '';
         return String(str)
@@ -293,9 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, '&#039;');
     }
 
-    // Submit do Formulário de Início (INICIAR JOGO)
+    // Submit do Formulário de Início
     startForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Impede o recarregamento da página
+        e.preventDefault();
 
         const nameValue = playerInput.value.trim();
         if (!nameValue) {
@@ -303,15 +362,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const charInput = document.querySelector('input[name="character"]:checked');
+        if (charInput) {
+            selectedCharacter = charInput.value;
+        }
         currentPlayer = nameValue;
         localStorage.setItem('mario_jump_player', currentPlayer);
 
-        // Fecha tela de início e começa o jogo
         startModal.classList.remove('active');
         startGame();
     });
 
-    // Botão "VER RANKING" na tela inicial
     btnViewRanking.addEventListener('click', () => {
         fetchRanking();
         finalScoreValue.textContent = '---';
@@ -320,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameoverModal.classList.add('active');
     });
 
-    // Botão "JOGAR NOVAMENTE" no Game Over
     btnRestart.addEventListener('click', () => {
         gameoverModal.classList.remove('active');
         if (!currentPlayer) {
@@ -331,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 4. Botão "TROCAR JOGADOR" no Game Over
     btnChangePlayer.addEventListener('click', () => {
         gameoverModal.classList.remove('active');
         resetElements();
@@ -340,7 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
         playerInput.focus();
     });
 
-    // 5. Controle do Pulo por Teclado (Espaço ou Seta para Cima)
     document.addEventListener('keydown', (e) => {
         if (e.code === 'Space' || e.key === ' ' || e.code === 'ArrowUp') {
             if (isPlaying) {
@@ -349,4 +407,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    function updatePipeSpeed(newDuration) {
+        const currentLeft = pipe.getBoundingClientRect().left;
+        const boardLeft = gameBoard.getBoundingClientRect().left;
+        const offset = currentLeft - boardLeft;
+
+        // Ajusta a animação para a nova duração preservando a posição do cano
+        pipe.style.animation = 'none';
+        pipe.style.left = `${offset}px`;
+
+        // Força o reflow do navegador
+        void pipe.offsetWidth;
+
+        pipe.style.left = '';
+        pipe.style.animation = `pipe-animation ${newDuration} infinite linear`;
+    }
 });

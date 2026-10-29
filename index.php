@@ -40,6 +40,11 @@ try {
                 <span class="label">PONTOS:</span>
                 <span class="value" id="score-display">0</span>
             </div>
+            <!-- ADICIONA ESTAS LINHAS AQUI LUGAR DAS VIDAS: -->
+            <div class="lives-info">
+                <span class="label">VIDAS:</span>
+                <span class="value" id="lives-display">❤️ ❤️ ❤️</span>
+            </div>
         </header>
 
         
@@ -48,6 +53,7 @@ try {
             <img src="assets/mario.gif" class="mario" alt="Mario">
             <img src="assets/pipe.png" class="pipe" alt="Cano">
             <img src="assets/coin.gif" class="coin" alt="Moeda">
+            <div id="life-lost-effect" class="life-lost-effect">-1 ❤️</div>
             <span class="jump-tip" id="jump-tip">Pressione ESPAÇO ou clique para pular</span>
         </main>
     </div>
@@ -57,6 +63,13 @@ try {
         <div class="modal-card">
             <div class="modal-header">
                 <h1 class="game-title">MARIO JUMP</h1>
+                <div class="senai-logo">
+                    <span class="senai-s">S</span>
+                    <span class="senai-e">E</span>
+                    <span class="senai-n">N</span>
+                    <span class="senai-a">A</span>
+                    <span class="senai-i">I</span>
+                </div>
                 <p class="game-subtitle">Corra, desvie dos canos e dispute o topo do ranking!</p>
             </div>
 
@@ -80,11 +93,32 @@ try {
                             <span>Mario</span>
                         </label>
                         <label class="char-option">
+                            <input type="radio" name="character" value="luigi">
+                            <img src="assets/luigi.gif" alt="Luigi">
+                            <span>Luigi</span>
+                        </label>
+                        <label class="char-option">
                             <input type="radio" name="character" value="sonic">
-                            <img src="assets/sonic.gif" alt="Sonic">
+                            <img src="assets/soniccc.gif" alt="Sonic">
                             <span>Sonic</span>
                         </label>
                     </div>
+                    <!-- <div class="input-group">
+                            <label>ESCOLHA O PERSONAGEM:</label>
+                        <div style="display: flex; gap: 20px; justify-content: center; margin: 10px 0;">
+                            <label style="cursor: pointer; text-align: center;">
+                            <input type="radio" name="character" value="mario" checked>
+                            <br>
+                            <img src="assets/mario.gif" width="40" alt="Mario">
+                        <div>Mario</div>
+                        </label>
+                            <label style="cursor: pointer; text-align: center;">
+                            <input type="radio" name="character" value="sonic">
+                            <br>
+                            <img src="assets/sonic.gif" width="40" alt="Sonic">
+                        <div>Sonic</div>
+                        </label>
+                    </div> -->
                 </div>
 
                 <div class="modal-actions">

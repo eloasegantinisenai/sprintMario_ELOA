@@ -115,7 +115,7 @@ body {
 
 /* Animações ativas durante o jogo */
 .game-board.running .pipe {
-    animation: pipe-animation 1.6s infinite linear;
+    animation: pipe-animation var(--pipe-speed, 1.8s) infinite linear;
 }
 
 .game-board.running .clouds {
@@ -555,4 +555,139 @@ body {
     border-color: #ffcc00;
     background: rgba(255, 204, 0, 0.2);
     transform: scale(1.05);
+}
+/* Seletor de Personagens */
+.character-select {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 15px 0;
+}
+.char-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.char-option img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.char-option input[type="radio"] {
+    display: none; /* Esconde o botão de rádio padrão */
+}
+
+/* Destaque para o personagem selecionado */
+.char-option:has(input:checked) {
+    border-color: #ffcc00;
+    background: rgba(255, 204, 0, 0.2);
+    transform: scale(1.05);
+}
+.mario {
+    width: 130px !important; /* Ajusta o tamanho da imagem */
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    z-index: 2;
+}
+
+/* Ajuste específico caso a imagem do Sonic seja muito grande */
+.mario.sonic-active {
+    width: 100px !important; /* Tamanho ajustado do Sonic */
+}
+
+/* Estilização do SENAI Colorido */
+.senai-logo {
+    font-family: 'Arial Black', sans-serif;
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 4px;
+    margin: 10px 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+.senai-logo span.senai-s { color: #e52521 !important; } /* Vermelho */
+.senai-logo span.senai-e { color: #43b02a !important; } /* Verde */
+.senai-logo span.senai-n { color: #fbd000 !important; } /* Amarelo */
+.senai-logo span.senai-a { color: #00247d !important; } /* Azul */
+.senai-logo span.senai-i { color: #ff6600 !important; } /* Laranja */
+
+/* Efeito de texto flutuante -1 Vida */
+.life-lost-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ff2a2a;
+    text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.life-lost-effect.show {
+    animation: popAndFade 0.8s ease-out forwards;
+}
+
+@keyframes popAndFade {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -90%) scale(1.4);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -130%) scale(1.8);
+    }
+}
+
+/* Animação de tremor no HUD de Vidas */
+.lives-info.damage {
+    animation: shakeLives 0.4s ease-in-out;
+    color: #ff2a2a;
+}
+
+@keyframes shakeLives {
+    0%, 100% { transform: scale(1); }
+    20%, 60% { transform: scale(1.3) rotate(-5deg); }
+    40%, 80% { transform: scale(1.3) rotate(5deg); }
+}
+.mario.luigi-active {
+    width: 140px; /* Ajuste a largura conforme o tamanho da sua imagem */
+}
+
+/* Borda Colorida na Caixa da Tela Inicial */
+#start-modal .modal-card {
+    /* Define uma borda transparente para dar espaço ao gradiente */
+    border: 4px solid transparent;
+    
+    /* Aplica o gradiente com as cores do jogo (Vermelho, Verde, Amarelo, Azul) na borda */
+    border-image: linear-gradient(45deg, #e52521, #43b02a, #fbd000, #00247d) 1;
+    
+    /* Mantém uma sombra suave para destacar */
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Aplicando a Borda Colorida no Card de Game Over / Ranking */
+#gameover-modal .gameover-card {
+    /* Define uma borda transparente para aplicar o gradiente */
+    border: 4px solid transparent;
+    
+    /* Aplica o mesmo gradiente da tela de início (Vermelho, Verde, Amarelo, Azul) */
+    border-image: linear-gradient(45deg, #e52521, #43b02a, #fbd000, #00247d) 1;
+    
+    /* Sombra para destacar o card */
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.4);
 }
